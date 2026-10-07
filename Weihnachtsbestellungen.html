@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weihnachtsbestellungen – Metzgerei Klein</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f4;color:#1c1917;font-size:14px}
+header{background:#1c1917;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{font-size:16px;font-weight:600}
+.header-right{display:flex;align-items:center;gap:12px}
+.sync-status{font-size:12px;opacity:0.6}
+.sync-status.ok{opacity:1;color:#86efac}
+.sync-status.err{opacity:1;color:#fca5a5}
+.tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid #e7e5e4;padding:0 24px;overflow-x:auto}
+.tab{padding:12px 18px;font-size:13px;cursor:pointer;color:#78716c;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;white-space:nowrap}
+.tab.active{color:#1c1917;border-bottom-color:#1c1917;font-weight:500}
+.tab:hover:not(.active){color:#44403c}
+.main{padding:20px 24px;max-width:1000px}
+.panel{display:none}.panel.active{display:block}
+.section-title{font-size:15px;font-weight:600;margin-bottom:16px}
+.card{background:#fff;border:1px solid #e7e5e4;border-radius:8px;padding:16px;margin-bottom:10px}
+.row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.field{flex:1;min-width:120px}
+.field label{display:block;font-size:11px;color:#78716c;margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+.field input,.field select,.field textarea{width:100%;padding:7px 10px;border:1px solid #d6d3d1;border-radius:6px;background:#fff;color:#1c1917;font-size:13px;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#1c1917}
+.field textarea{resize:vertical;min-height:52px}
+.pos-form{background:#fafaf9;border:1px solid #e7e5e4;border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.pos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pos-label{font-size:12px;font-weight:600;color:#78716c;text-transform:uppercase;letter-spacing:0.04em}
+.btn{padding:7px 16px;border-radius:6px;border:1px solid #d6d3d1;background:#fff;color:#1c1917;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500}
+.btn:hover{background:#fafaf9}
+.btn-primary{background:#1c1917;color:#fff;border-color:#1c1917}
+.btn-primary:hover{background:#292524}
+.btn-add{border-style:dashed;color:#78716c;width:100%;padding:10px;text-align:center;margin-top:4px}
+.btn-add:hover{background:#fafaf9;color:#1c1917}
+.btn-sm{padding:3px 10px;font-size:12px;border-radius:5px;border:1px solid #e7e5e4;background:#fff;color:#78716c;cursor:pointer;font-family:inherit}
+.btn-sm:hover{color:#1c1917;border-color:#d6d3d1}
+.btn-red{border-color:#fca5a5;color:#dc2626}
+.btn-red:hover{background:#fef2f2}
+.divider{border:none;border-top:1px solid #e7e5e4;margin:16px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bw{background:#dcfce7;color:#166534}.bs{background:#ede9fe;color:#4c1d95}
+.search-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-row input,.search-row select{padding:7px 10px;border:1px solid #d6d3d1;border-radius:6px;background:#fff;color:#1c1917;font-size:13px;font-family:inherit}
+.search-row input{flex:1}
+.kunden-card{background:#fff;border:1px solid #e7e5e4;border-radius:8px;padding:14px 16px;margin-bottom:8px}
+.kunden-card.abgeholt{border-color:#86efac;background:#f0fdf4}
+.kunden-card.zusammengestellt{border-color:#fcd34d;background:#fffbeb}
+.kunden-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.kname{font-size:15px;font-weight:600}
+.kmeta{font-size:12px;color:#78716c;margin-top:2px}
+.pos-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.pos-item{border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.pos-item.vorbereitet{background:#f0fdf4;border:1px solid #86efac}
+.pos-item.nicht-vorbereitet{background:#fafaf9;border:1px solid #e7e5e4}
+.pos-content{flex:1}
+.pos-kat{font-size:11px;font-weight:600;color:#78716c;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px}
+.pos-detail{font-size:13px}
+.pos-extra{font-size:12px;color:#78716c;font-style:italic;margin-top:2px}
+.status-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status-btn{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #d6d3d1;background:#fff;font-family:inherit;font-weight:500;transition:all 0.15s}
+.status-btn.active-vorbereitet{background:#dcfce7;border-color:#86efac;color:#166534}
+.status-btn.active-zusammengestellt{background:#fef9c3;border-color:#fcd34d;color:#92400e}
+.status-btn.active-abgeholt{background:#1c1917;border-color:#1c1917;color:#fff}
+.prod-block{margin-bottom:24px}
+.prod-title{font-size:14px;font-weight:600;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #1c1917;display:flex;align-items:baseline;gap:8px}
+.prod-count{font-size:12px;font-weight:400;color:#78716c}
+.prod-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e7e5e4;border-radius:8px;overflow:hidden}
+.prod-table th{text-align:left;font-size:11px;color:#78716c;font-weight:600;padding:8px 10px;background:#fafaf9;border-bottom:1px solid #e7e5e4;text-transform:uppercase;letter-spacing:0.04em}
+.prod-table td{padding:7px 10px;border-bottom:1px solid #f5f5f4;vertical-align:middle;color:#1c1917}
+.prod-table tr:last-child td{border-bottom:none}
+.prod-table .total-row td{background:#f5f5f4;font-weight:600;font-size:11px}
+.prod-table tr.row-vorbereitet td{background:#f0fdf4}
+.prod-table .fleisch-group-header td{background:#f9f7f5;font-size:11px;font-weight:600;color:#78716c;padding:5px 10px;border-top:1px solid #e7e5e4;text-transform:uppercase;letter-spacing:0.04em}
+.empty{text-align:center;padding:3rem;color:#a8a29e;font-size:13px}
+.ok-msg{background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:6px;padding:9px 14px;font-size:13px;margin-top:10px;display:none;font-weight:500}
+.loading{text-align:center;padding:2rem;color:#78716c;font-size:13px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:#fff;border:2px solid #e7e5e4;border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all 0.15s;user-select:none}
+.stat:hover{border-color:#d6d3d1;background:#fafaf9}
+.stat.active-filter{border-color:#1c1917;background:#1c1917;color:#fff}
+.stat.active-filter .stat-l{color:#d6d3d1}
+.stat.filter-offen.active-filter{background:#dc2626;border-color:#dc2626}
+.stat.filter-bereit.active-filter{background:#92400e;border-color:#92400e}
+.stat.filter-abgeholt.active-filter{background:#166534;border-color:#166534}
+.stat .n{font-size:26px;font-weight:700}
+.stat .stat-l{font-size:11px;color:#78716c;margin-top:2px;text-transform:uppercase;letter-spacing:0.04em}
+.kalender-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:20px}
+.tag-kachel{background:#fff;border:2px solid #e7e5e4;border-radius:8px;padding:12px 14px;cursor:pointer;transition:all 0.15s;user-select:none}
+.tag-kachel:hover{border-color:#d6d3d1;background:#fafaf9}
+.tag-kachel.active{border-color:#1c1917;background:#1c1917;color:#fff}
+.tag-kachel.active .tag-wochentag{color:#d6d3d1}
+.tag-kachel.active .tag-count{background:#fff;color:#1c1917}
+.tag-kachel.hat-bestellungen{border-color:#d6d3d1}
+.tag-kachel.heute-tag{border-color:#fcd34d}
+.tag-datum{font-size:18px;font-weight:700}
+.tag-wochentag{font-size:11px;color:#78716c;margin-top:1px;text-transform:uppercase;letter-spacing:0.04em}
+.tag-count{display:inline-block;margin-top:8px;background:#f5f5f4;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:600;color:#1c1917}
+.tag-count.null{background:transparent;color:#a8a29e;font-weight:400}
+.heute-detail{background:#fff;border:1px solid #e7e5e4;border-radius:8px;padding:16px;margin-bottom:16px}
+.heute-detail-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.heute-detail-title{font-size:15px;font-weight:600}
+.heute-kunden-list{display:flex;flex-direction:column;gap:8px}
+.heute-card{background:#fafaf9;border:1px solid #e7e5e4;border-radius:6px;padding:12px 14px}
+.heute-card.abgeholt{border-color:#86efac;background:#f0fdf4;opacity:0.75}
+.heute-card.zusammengestellt{border-color:#fcd34d;background:#fffbeb}
+.heute-name{font-size:14px;font-weight:600;margin-bottom:3px}
+.heute-pos{font-size:12px;color:#78716c;margin-bottom:8px}
+.platte-wrap{margin-top:10px}
+.gew-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap}
+.gew-field{flex:0 0 150px}
+.gew-field label{display:block;font-size:11px;color:#78716c;margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+.gew-field input{width:100%;padding:7px 10px;border:1px solid #d6d3d1;border-radius:6px;background:#fff;color:#1c1917;font-size:13px;font-family:inherit}
+.auto-btn{padding:7px 14px;font-size:12px;border-radius:6px;border:1px solid #d6d3d1;background:#fff;color:#1c1917;cursor:pointer;font-family:inherit;font-weight:500;align-self:flex-end}
+.sorte-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:6px}
+.sorte-cell{border:1px solid #e7e5e4;border-radius:6px;padding:8px 9px;background:#fff;transition:opacity 0.1s}
+.sorte-cell.off{opacity:0.35;background:#fafaf9}
+.sorte-label{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.sorte-label input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:#1c1917;flex-shrink:0}
+.sorte-label span{font-size:12px;color:#44403c;font-weight:500}
+.sorte-cell input[type=number]{width:100%;border:none;border-bottom:1px solid #e7e5e4;background:transparent;color:#1c1917;font-size:15px;font-weight:600;padding:2px 0;font-family:inherit;text-align:right}
+.sorte-cell input[type=number]:focus{outline:none;border-bottom-color:#1c1917}
+.sorte-cell input[type=number]:disabled{color:#d6d3d1}
+.sorte-unit{font-size:10px;color:#a8a29e;text-align:right;margin-top:1px}
+.total-bar{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:7px 12px;background:#fff;border-radius:6px;border:1px solid #e7e5e4;font-size:13px}
+.tbar-l{color:#78716c;font-size:12px}
+.tbar-v{font-weight:700;font-size:15px}
+.diff-ok{color:#166534;font-size:12px;font-weight:500}
+.diff-warn{color:#92400e;font-size:12px;font-weight:500}
+.diff-err{color:#dc2626;font-size:12px;font-weight:500}
+.backup-bar{background:#fff;border-bottom:1px solid #e7e5e4;padding:8px 24px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.backup-info{font-size:11px;color:#a8a29e;margin-left:auto}
+.backup-bar{background:#fff;border-bottom:1px solid #e7e5e4;padding:8px 24px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.backup-info{font-size:11px;color:#a8a29e;margin-left:auto}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>🎄 Weihnachtsbestellungen – Metzgerei Klein</h1>
+  <div class="header-right">
+    <span class="sync-status" id="sync-status">Verbinde...</span>
+    <span id="header-count" style="font-size:12px;opacity:0.6">0 Bestellungen</span>
+  </div>
+</header>
+<div class="backup-bar">
+  <span style="font-size:12px;color:#78716c;font-weight:500">Lokale Sicherung:</span>
+  <button class="btn" onclick="exportJSON()">&#x1F4BE; Speichern (JSON)</button>
+  <button class="btn" onclick="exportCSVLocal()">&#x1F4CA; CSV Export</button>
+  <button class="btn" onclick="exportExcel()">&#x1F4C8; Excel Export</button>
+  <label class="btn" style="cursor:pointer">&#x1F4C2; Laden <input type="file" accept=".json" style="display:none" onchange="importJSON(this)"></label>
+  <span class="backup-info" id="backup-info">Noch nicht gespeichert</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('neu')">+ Neue Bestellung</button>
+  <button class="tab" onclick="showTab('kalender')">Kalender</button>
+  <button class="tab" onclick="showTab('kunden')">Nach Kunden</button>
+  <button class="tab" onclick="showTab('produkte')">Nach Produkt</button>
+</div>
+<div class="main">
+
+<!-- NEU -->
+<div class="panel active" id="panel-neu">
+  <p class="section-title">Neue Bestellung erfassen</p>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Kundenname</label><input id="n-name" type="text" placeholder="z.B. Windgens"></div>
+      <div class="field" style="flex:0 0 120px"><label>Abholdatum</label><select id="n-datum"></select></div>
+      <div class="field" style="flex:0 0 130px"><label>Anlass</label>
+        <select id="n-anlass"><option value="w">Weihnachten</option><option value="s">Silvester</option></select>
+      </div>
+    </div>
+    <div id="positionen-container"></div>
+    <button class="btn btn-add" onclick="addPosition()">+ Position hinzufügen</button>
+    <div class="divider"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="saveKunde()">Bestellung speichern</button>
+      <button class="btn" onclick="clearForm()">Leeren</button>
+    </div>
+    <div class="ok-msg" id="ok-msg">✓ Bestellung gespeichert!</div>
+  </div>
+</div>
+
+<!-- KALENDER -->
+<div class="panel" id="panel-kalender">
+  <div class="kalender-grid" id="kalender-grid"></div>
+  <div id="kalender-detail" style="display:none">
+    <div class="heute-detail">
+      <div class="heute-detail-header">
+        <div class="heute-detail-title" id="detail-title">—</div>
+        <div class="stats-row" style="margin:0;gap:8px;min-width:360px" id="detail-stats">
+          <div class="stat filter-alle active-filter" onclick="setDetailFilter('alle')" style="padding:10px">
+            <div class="n" id="ds-alle" style="font-size:18px">0</div><div class="stat-l">Alle</div>
+          </div>
+          <div class="stat filter-offen" onclick="setDetailFilter('offen')" style="padding:10px">
+            <div class="n" id="ds-offen" style="font-size:18px;color:#dc2626">0</div><div class="stat-l">Offen</div>
+          </div>
+          <div class="stat filter-bereit" onclick="setDetailFilter('bereit')" style="padding:10px">
+            <div class="n" id="ds-bereit" style="font-size:18px;color:#92400e">0</div><div class="stat-l">Bereit</div>
+          </div>
+          <div class="stat filter-abgeholt" onclick="setDetailFilter('abgeholt')" style="padding:10px">
+            <div class="n" id="ds-abgeholt" style="font-size:18px;color:#166534">0</div><div class="stat-l">Abgeholt</div>
+          </div>
+        </div>
+      </div>
+      <div class="heute-kunden-list" id="detail-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- KUNDEN -->
+<div class="panel" id="panel-kunden">
+  <div class="search-row">
+    <input type="text" id="k-search" placeholder="Kundenname suchen..." oninput="renderKunden()">
+    <select id="k-datum" onchange="renderKunden()"><option value="">Alle Daten</option></select>
+    <select id="k-anlass" onchange="renderKunden()"><option value="">Alle</option><option value="w">Weihnachten</option><option value="s">Silvester</option></select>
+  </div>
+  <div id="kunden-list"><div class="loading">Lade...</div></div>
+</div>
+
+<!-- PRODUKTE -->
+<div class="panel" id="panel-produkte">
+  <div class="stats-row" style="cursor:default">
+    <div class="stat" style="cursor:default"><div class="n" id="st-k">0</div><div class="stat-l">Kunden</div></div>
+    <div class="stat" style="cursor:default"><div class="n" id="st-p">0</div><div class="stat-l">Positionen</div></div>
+    <div class="stat" style="cursor:default"><div class="n" id="st-w">0</div><div class="stat-l">Weihnachten</div></div>
+    <div class="stat" style="cursor:default"><div class="n" id="st-s">0</div><div class="stat-l">Silvester</div></div>
+  </div>
+  <div class="search-row">
+    <select id="p-datum" onchange="renderProdukte()"><option value="">Alle Daten</option></select>
+    <select id="p-anlass" onchange="renderProdukte()"><option value="">Alle</option><option value="w">Weihnachten</option><option value="s">Silvester</option></select>
+    <button class="btn" onclick="exportCSV()">CSV exportieren</button>
+  </div>
+  <div id="produkte-list"><div class="loading">Lade...</div></div>
+</div>
+
+</div>
+<script>
+const SUPABASE_URL='https://arnjdcooejklwxmvmncp.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFybmpkY29vZWprbHd4bXZtbmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyODUwMTAsImV4cCI6MjEwNjg2MTAxMH0.cg5jrix66HZR6FIzfco-XWyY2GgZU9MQrfLbsughYVk';
+
+const PLATTE_SORTEN={
+  'Fondue Platte':['Rind','Kalb','Puter','Schwein','Boulette','Weißwurst'],
+  'Raclette Platte':['Rind','Kalb','Puter','Schwein','Burger','Weißwurst','Cordonbleu','Pflaume'],
+  'Raclette Käse Platte':['Raclette','Göhltaler','Le Valét','Bärlauch']
+};
+
+const KATEGORIEN=[
+  'Fondue Platte',
+  'Raclette Platte',
+  'Fondue/Raclette ohne Platte',
+  'Raclette Käse Platte',
+  'Raclette Käse ohne Platte',
+  'Hirschgulasch',
+  'Rehgulasch',
+  'Hirschrücken & Braten',
+  'Rindfleisch Divers',
+  'Rinderbraten, Filet & Contrefilet',
+  'Kalb',
+  'Lamm',
+  'Schwein',
+  'Geflügel',
+  'Gefüllte Braten',
+  'Pasteten',
+  'Suppen',
+  'Rehpfeffer Tafelfertig',
+  'Rindergulasch Rehpfefferart',
+  'Sauerbraten',
+  'Kalbsgeschnetzeltes',
+  'Kaninchenschenkel Grand Veneur',
+  'Gratin',
+  'Diverse Fertiggerichte',
+  'Sonstiges'
+];
+
+const WOCHENTAGE=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const ALLE_TAGE=[];
+for(let d=1;d<=31;d++) ALLE_TAGE.push(d.toString().padStart(2,'0')+'/12');
+
+let DB=[],posCount=0,selectedDatum=null,detailFilter='alle';
+
+function fillDatumSelects(){
+  ['n-datum','k-datum','p-datum'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML=id==='n-datum'?'':'<option value="">Alle Daten</option>';
+    ALLE_TAGE.forEach(d=>{
+      const opt=document.createElement('option');
+      opt.value=d;opt.textContent=d;
+      if(id==='n-datum'&&d==='24/12')opt.selected=true;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+async function api(method,path,body){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
+    method,
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':'return=minimal'},
+    body:body?JSON.stringify(body):undefined
+  });
+  if(!res.ok)throw new Error(await res.text());
+  if(method==='GET'||method==='POST')return res.json();
+  return null;
+}
+
+async function loadDB(){
+  try{DB=await api('GET','bestellungen?order=erstellt_am.asc');updateHeaderCount();setSyncStatus(true);}
+  catch(e){setSyncStatus(false);}
+}
+
+function setSyncStatus(ok){
+  const el=document.getElementById('sync-status');
+  el.textContent=ok?'● Verbunden':'● Offline';
+  el.className='sync-status '+(ok?'ok':'err');
+}
+function updateHeaderCount(){
+  document.getElementById('header-count').textContent=DB.length+' Bestellung'+(DB.length!==1?'en':'');
+}
+function getTodayDatum(){
+  const d=new Date();
+  return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+}
+function showTab(id){
+  ['neu','kalender','kunden','produkte'].forEach((t,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===id);
+    document.getElementById('panel-'+t).classList.toggle('active',t===id);
+  });
+  if(id==='kalender')renderKalender();
+  if(id==='kunden')renderKunden();
+  if(id==='produkte')renderProdukte();
+}
+
+setInterval(async()=>{
+  await loadDB();
+  const idx=[...document.querySelectorAll('.tab')].findIndex(t=>t.classList.contains('active'));
+  const id=['neu','kalender','kunden','produkte'][idx];
+  if(id==='kalender')renderKalender();
+  if(id==='kunden')renderKunden();
+  if(id==='produkte')renderProdukte();
+},30000);
+
+// ===== KALENDER =====
+function renderKalender(){
+  const today=getTodayDatum();
+  document.getElementById('kalender-grid').innerHTML=ALLE_TAGE.map(datum=>{
+    const count=DB.filter(e=>e.datum===datum).length;
+    const date=new Date(2025,11,parseInt(datum));
+    const wt=WOCHENTAGE[date.getDay()];
+    const isSelected=datum===selectedDatum;
+    let cls='tag-kachel'+(count>0?' hat-bestellungen':'')+(datum===today?' heute-tag':'')+(isSelected?' active':'');
+    return '<div class="'+cls+'" onclick="selectTag(\''+datum+'\')"><div class="tag-datum">'+datum.replace('/12','')+'</div>'
+      +'<div class="tag-wochentag">'+wt+' · Dez</div>'
+      +'<div class="tag-count'+(count===0?' null':'')+'">'+count+(count===1?' Bestellung':' Bestellungen')+'</div></div>';
+  }).join('');
+  if(selectedDatum)renderKalenderDetail();
+}
+
+function selectTag(datum){
+  selectedDatum=datum;detailFilter='alle';
+  renderKalender();
+  document.getElementById('kalender-detail').style.display='block';
+  renderKalenderDetail();
+  document.getElementById('kalender-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function setDetailFilter(f){
+  detailFilter=f;
+  document.querySelectorAll('#detail-stats .stat').forEach(el=>{
+    el.classList.remove('active-filter');
+    if(el.classList.contains('filter-'+f))el.classList.add('active-filter');
+  });
+  renderKalenderDetail();
+}
+
+function renderKalenderDetail(){
+  if(!selectedDatum)return;
+  const date=new Date(2025,11,parseInt(selectedDatum));
+  document.getElementById('detail-title').textContent=WOCHENTAGE[date.getDay()]+', '+selectedDatum.replace('/12','. Dezember 2025');
+  let list=DB.filter(e=>e.datum===selectedDatum);
+  document.getElementById('ds-alle').textContent=list.length;
+  document.getElementById('ds-offen').textContent=list.filter(e=>!e.status_zusammengestellt&&!e.status_abgeholt).length;
+  document.getElementById('ds-bereit').textContent=list.filter(e=>e.status_zusammengestellt&&!e.status_abgeholt).length;
+  document.getElementById('ds-abgeholt').textContent=list.filter(e=>e.status_abgeholt).length;
+  if(detailFilter==='offen')list=list.filter(e=>!e.status_zusammengestellt&&!e.status_abgeholt);
+  else if(detailFilter==='bereit')list=list.filter(e=>e.status_zusammengestellt&&!e.status_abgeholt);
+  else if(detailFilter==='abgeholt')list=list.filter(e=>e.status_abgeholt);
+  list.sort((a,b)=>{if(a.status_abgeholt!==b.status_abgeholt)return a.status_abgeholt?1:-1;if(a.status_zusammengestellt!==b.status_zusammengestellt)return a.status_zusammengestellt?-1:1;return a.name.localeCompare(b.name);});
+  const el=document.getElementById('detail-list');
+  if(!list.length){el.innerHTML='<div class="empty">Keine Bestellungen'+(detailFilter!=='alle'?' in dieser Kategorie':'')+'.</div>';return;}
+  el.innerHTML=list.map(e=>{
+    const cls=e.status_abgeholt?'abgeholt':e.status_zusammengestellt?'zusammengestellt':'';
+    const posZeilen=e.positionen.map(p=>p.isP?p.kat+(p.gesamt?' · '+p.gesamt:''):[p.kat,p.menge,p.fleisch].filter(Boolean).join(' · ')).join(', ');
+    const vorb=e.positionen.filter(p=>p.vorbereitet).length;
+    return '<div class="heute-card '+cls+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">'
+      +'<div><div class="heute-name">'+e.name+'</div><div class="heute-pos">'+posZeilen+'</div>'
+      +'<div style="font-size:11px;color:#78716c;margin-top:2px">Vorbereitet: '+vorb+'/'+e.positionen.length+'</div></div>'
+      +'<span class="badge '+(e.anlass==='s'?'bs':'bw')+'">'+(e.anlass==='s'?'Silvester':'Weihnachten')+'</span></div>'
+      +'<div class="status-bar">'
+      +'<button class="status-btn '+(e.status_zusammengestellt||e.status_abgeholt?'active-zusammengestellt':'')+'" onclick="updateStatus('+e.id+',\'status_zusammengestellt\','+(!(e.status_zusammengestellt||e.status_abgeholt))+')">'+(e.status_zusammengestellt||e.status_abgeholt?'✓ Zusammengestellt':'Zusammengestellt')+'</button>'
+      +'<button class="status-btn '+(e.status_abgeholt?'active-abgeholt':'')+'" onclick="updateStatus('+e.id+',\'status_abgeholt\','+(!e.status_abgeholt)+')">'+(e.status_abgeholt?'✓ Abgeholt':'Abgeholt')+'</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+// ===== FORMULAR =====
+function parseGewicht(str){
+  if(!str)return 0;str=str.toString().replace(',','.').toLowerCase().trim();
+  const kg=str.match(/([\d.]+)\s*kg/);if(kg)return Math.round(parseFloat(kg[1])*1000);
+  const gr=str.match(/([\d.]+)\s*gr?/);if(gr)return Math.round(parseFloat(gr[1]));
+  const n=parseFloat(str);if(!isNaN(n))return n<20?Math.round(n*1000):Math.round(n);
+  return 0;
+}
+function autoVerteilen(pid,kat){
+  const gi=document.getElementById('gew-'+pid);if(!gi)return;
+  const gesamt=parseGewicht(gi.value);if(!gesamt)return;
+  const aktive=(PLATTE_SORTEN[kat]||[]).filter(s=>{const cb=document.getElementById('chk-'+pid+'-'+s.replace(/\s/g,'_'));return cb&&cb.checked;});
+  if(!aktive.length)return;
+  const basis=Math.floor(gesamt/aktive.length),rest=gesamt-basis*aktive.length;
+  aktive.forEach((s,i)=>{const inp=document.getElementById('gr-'+pid+'-'+s.replace(/\s/g,'_'));if(inp)inp.value=basis+(i===0?rest:0);});
+  updateTotalBar(pid,kat);
+}
+function onCheckbox(pid,sorte,kat){
+  const sk=sorte.replace(/\s/g,'_');
+  const cb=document.getElementById('chk-'+pid+'-'+sk),cell=document.getElementById('scell-'+pid+'-'+sk),inp=document.getElementById('gr-'+pid+'-'+sk);
+  cell.classList.toggle('off',!cb.checked);inp.disabled=!cb.checked;if(!cb.checked)inp.value='';
+  const gi=document.getElementById('gew-'+pid);
+  if(gi&&parseGewicht(gi.value)>0)autoVerteilen(pid,kat);else updateTotalBar(pid,kat);
+}
+function updateTotalBar(pid,kat){
+  let total=0;
+  (PLATTE_SORTEN[kat]||[]).forEach(s=>{const inp=document.getElementById('gr-'+pid+'-'+s.replace(/\s/g,'_'));if(inp&&!inp.disabled&&inp.value)total+=parseInt(inp.value)||0;});
+  const valEl=document.getElementById('tval-'+pid),diffEl=document.getElementById('tdiff-'+pid);
+  if(valEl)valEl.textContent=total;
+  const gi=document.getElementById('gew-'+pid),soll=gi?parseGewicht(gi.value):0;
+  if(diffEl){if(soll>0){const diff=total-soll;diffEl.textContent=diff===0?'✓ passt genau':(diff>0?'+'+diff+' gr':diff+' gr');diffEl.className=diff===0?'diff-ok':Math.abs(diff)<=20?'diff-warn':'diff-err';}else{diffEl.textContent='';diffEl.className='';}}
+}
+function buildPlatteHTML(pid,kat,savedData){
+  const sorten=PLATTE_SORTEN[kat],savedGesamt=savedData?savedData.gesamt||'':'',savedSorten=savedData?savedData.sorten||{}:{},savedAktiv=savedData?savedData.aktiv||{}:{};
+  const sorteHTML=sorten.map(s=>{
+    const sk=s.replace(/\s/g,'_'),aktiv=savedData?(savedAktiv[s]!==false):true,val=savedSorten[s]||'';
+    return '<div class="sorte-cell'+(aktiv?'':' off')+'" id="scell-'+pid+'-'+sk+'">'
+      +'<div class="sorte-label"><input type="checkbox" id="chk-'+pid+'-'+sk+'" '+(aktiv?'checked':'')+' onchange="onCheckbox(\''+pid+'\',\''+s+'\',\''+kat+'\')">'
+      +'<span>'+s+'</span></div>'
+      +'<input type="number" id="gr-'+pid+'-'+sk+'" min="0" placeholder="—" value="'+val+'" '+(aktiv?'':'disabled')+' oninput="updateTotalBar(\''+pid+'\',\''+kat+'\')">'
+      +'<div class="sorte-unit">gr</div></div>';
+  }).join('');
+  return '<div class="platte-wrap"><div class="gew-row"><div class="gew-field"><label>Gesamtgewicht</label>'
+    +'<input type="text" id="gew-'+pid+'" placeholder="z.B. 1.75 kg" value="'+savedGesamt+'" oninput="autoVerteilen(\''+pid+'\',\''+kat+'\')">'
+    +'</div><button class="auto-btn" type="button" onclick="autoVerteilen(\''+pid+'\',\''+kat+'\')">Gleichmäßig aufteilen</button></div>'
+    +'<div class="sorte-grid">'+sorteHTML+'</div>'
+    +'<div class="total-bar"><span class="tbar-l">Verteilt:</span><span><span class="tbar-v" id="tval-'+pid+'">0</span> gr &nbsp;<span id="tdiff-'+pid+'"></span></span></div></div>';
+}
+function onKatChange(pid){
+  const kat=document.querySelector('#pos-'+pid+' .p-kat').value;
+  const pa=document.getElementById('platte-area-'+pid),mr=document.getElementById('menge-row-'+pid);
+  if(PLATTE_SORTEN[kat]){pa.innerHTML=buildPlatteHTML(pid,kat,null);pa.style.display='block';mr.style.display='none';}
+  else{pa.innerHTML='';pa.style.display='none';mr.style.display='flex';}
+}
+function addPosition(data){
+  posCount++;
+  const pid='p'+posCount,kat=data?data.kat:KATEGORIEN[0],isP=!!PLATTE_SORTEN[kat];
+  const div=document.createElement('div');div.className='pos-form';div.id='pos-'+pid;
+  div.innerHTML='<div class="pos-header"><span class="pos-label">Position '+posCount+'</span>'
+    +'<button class="btn-sm btn-red" type="button" onclick="document.getElementById(\'pos-'+pid+'\').remove()">entfernen</button></div>'
+    +'<div class="row"><div class="field"><label>Kategorie</label>'
+    +'<select class="p-kat" onchange="onKatChange(\''+pid+'\')">'+KATEGORIEN.map(k=>'<option'+(k===kat?' selected':'')+'>'+k+'</option>').join('')+'</select></div></div>'
+    +'<div class="row" id="menge-row-'+pid+'" style="display:'+(isP?'none':'flex')+'">'
+    +'<div class="field"><label>Menge / Gewicht</label><input class="p-menge" type="text" placeholder="z.B. 1.5 kg" value="'+(data&&!isP?data.menge||'':'')+'"></div>'
+    +'<div class="field"><label>Fleischsorte / Artikel</label><input class="p-fleisch" type="text" placeholder="z.B. Rinderfilet" value="'+(data&&!isP?data.fleisch||'':'')+'"></div></div>'
+    +'<div id="platte-area-'+pid+'" style="display:'+(isP?'block':'none')+'">'+(isP?buildPlatteHTML(pid,kat,data||null):'')+'</div>'
+    +'<div class="row" style="margin-top:8px">'
+    +'<div class="field"><label>Extrawunsch</label><textarea class="p-extra" rows="2" placeholder="z.B. Unpaniert, Vacuum...">'+(data?data.extra||'':'')+'</textarea></div>'
+    +'<div class="field"><label>Intern</label><input class="p-intern" type="text" placeholder="Mehrere Sachen..." value="'+(data?data.intern||'':'')+'"></div></div>';
+  document.getElementById('positionen-container').appendChild(div);
+}
+function getPosData(){
+  return Array.from(document.querySelectorAll('.pos-form')).map(div=>{
+    const pid=div.id.replace('pos-',''),kat=div.querySelector('.p-kat').value,isP=!!PLATTE_SORTEN[kat];
+    let sorten={},aktiv={},gesamt='',menge='',fleisch='';
+    if(isP){
+      const gi=document.getElementById('gew-'+pid);gesamt=gi?gi.value:'';
+      (PLATTE_SORTEN[kat]||[]).forEach(s=>{const sk=s.replace(/\s/g,'_'),cb=document.getElementById('chk-'+pid+'-'+sk),inp=document.getElementById('gr-'+pid+'-'+sk);aktiv[s]=cb?cb.checked:true;if(cb&&cb.checked&&inp&&inp.value)sorten[s]=parseInt(inp.value);});
+      menge=gesamt||(Object.values(sorten).reduce((a,b)=>a+b,0)+'gr');
+    }else{menge=div.querySelector('.p-menge').value.trim();fleisch=div.querySelector('.p-fleisch').value.trim();}
+    return{kat,isP,sorten,aktiv,gesamt,menge,fleisch,extra:div.querySelector('.p-extra').value.trim(),intern:div.querySelector('.p-intern').value.trim(),vorbereitet:false};
+  });
+}
+async function saveKunde(){
+  const name=document.getElementById('n-name').value.trim();
+  if(!name){alert('Bitte Kundennamen eingeben.');return;}
+  const pos=getPosData();if(!pos.length){alert('Bitte mindestens eine Position hinzufügen.');return;}
+  try{
+    const result=await api('POST','bestellungen',{name,datum:document.getElementById('n-datum').value,anlass:document.getElementById('n-anlass').value,positionen:pos,status_zusammengestellt:false,status_abgeholt:false});
+    DB.push(result[0]);updateHeaderCount();clearForm();
+    const m=document.getElementById('ok-msg');m.style.display='block';setTimeout(()=>m.style.display='none',2500);
+  }catch(e){alert('Fehler beim Speichern: '+e.message);}
+}
+function clearForm(){document.getElementById('n-name').value='';document.getElementById('positionen-container').innerHTML='';posCount=0;}
+
+async function updateStatus(id,field,value){
+  try{
+    await api('PATCH','bestellungen?id=eq.'+id,{[field]:value});
+    const e=DB.find(x=>x.id===id);if(e)e[field]=value;
+    const idx=[...document.querySelectorAll('.tab')].findIndex(t=>t.classList.contains('active'));
+    const tab=['neu','kalender','kunden','produkte'][idx];
+    if(tab==='kalender'){renderKalender();renderKalenderDetail();}
+    if(tab==='kunden')renderKunden();
+  }catch(e){alert('Fehler: '+e.message);}
+}
+async function toggleVorbereitet(bid,pidx){
+  const entry=DB.find(e=>e.id===bid);if(!entry)return;
+  const pos=[...entry.positionen];pos[pidx]={...pos[pidx],vorbereitet:!pos[pidx].vorbereitet};
+  try{
+    await api('PATCH','bestellungen?id=eq.'+bid,{positionen:pos});entry.positionen=pos;
+    const idx=[...document.querySelectorAll('.tab')].findIndex(t=>t.classList.contains('active'));
+    const tab=['neu','kalender','kunden','produkte'][idx];
+    if(tab==='kalender'){renderKalender();renderKalenderDetail();}
+    if(tab==='kunden')renderKunden();
+    if(tab==='produkte')renderProdukte();
+  }catch(e){alert('Fehler: '+e.message);}
+}
+async function deleteKunde(id){
+  if(!confirm('Bestellung wirklich löschen?'))return;
+  try{await api('DELETE','bestellungen?id=eq.'+id);DB=DB.filter(e=>e.id!==id);updateHeaderCount();renderKunden();}
+  catch(e){alert('Fehler: '+e.message);}
+}
+async function editKunde(id){
+  const e=DB.find(x=>x.id===id);if(!e)return;
+  showTab('neu');
+  document.getElementById('n-name').value=e.name;
+  document.getElementById('n-datum').value=e.datum;
+  document.getElementById('n-anlass').value=e.anlass;
+  document.getElementById('positionen-container').innerHTML='';posCount=0;
+  e.positionen.forEach(p=>addPosition(p));
+  try{await api('DELETE','bestellungen?id=eq.'+id);DB=DB.filter(x=>x.id!==id);updateHeaderCount();}
+  catch(e){alert('Fehler: '+e.message);}
+}
+
+function sortenZeile(sorten){if(!sorten||!Object.keys(sorten).length)return'—';return Object.entries(sorten).map(([k,v])=>k+': '+v+'gr').join(' · ');}
+
+function renderKunden(){
+  const q=(document.getElementById('k-search').value||'').toLowerCase();
+  const fd=document.getElementById('k-datum').value,fa=document.getElementById('k-anlass').value;
+  const list=DB.filter(e=>(!q||e.name.toLowerCase().includes(q))&&(!fd||e.datum===fd)&&(!fa||e.anlass===fa))
+    .sort((a,b)=>a.datum.localeCompare(b.datum)||a.name.localeCompare(b.name));
+  const el=document.getElementById('kunden-list');
+  if(!list.length){el.innerHTML='<div class="empty">Keine Einträge gefunden.</div>';return;}
+  el.innerHTML=list.map(e=>{
+    const cls=e.status_abgeholt?'abgeholt':e.status_zusammengestellt?'zusammengestellt':'';
+    return '<div class="kunden-card '+cls+'">'
+      +'<div class="kunden-card-header"><div><div class="kname">'+e.name+'</div>'
+      +'<div class="kmeta">Abholung: '+e.datum+' &nbsp;·&nbsp; <span class="badge '+(e.anlass==='s'?'bs':'bw')+'">'+(e.anlass==='s'?'Silvester':'Weihnachten')+'</span></div></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="btn-sm" onclick="editKunde('+e.id+')">bearbeiten</button>'
+      +'<button class="btn-sm btn-red" onclick="deleteKunde('+e.id+')">löschen</button></div></div>'
+      +'<div class="pos-list">'+e.positionen.map((p,i)=>
+        '<div class="pos-item '+(p.vorbereitet?'vorbereitet':'nicht-vorbereitet')+'">'
+        +'<div class="pos-content"><div class="pos-kat">'+p.kat+(p.gesamt?' · '+p.gesamt:p.menge?' · '+p.menge:'')+'</div>'
+        +'<div class="pos-detail">'+(p.isP?sortenZeile(p.sorten):[p.menge,p.fleisch].filter(Boolean).join(' · '))+'</div>'
+        +(p.extra?'<div class="pos-extra">Sonderwunsch: '+p.extra+'</div>':'')
+        +(p.intern?'<div class="pos-extra" style="color:#a8a29e">Intern: '+p.intern+'</div>':'')
+        +'</div><button class="status-btn '+(p.vorbereitet?'active-vorbereitet':'')+'" onclick="toggleVorbereitet('+e.id+','+i+')">'+(p.vorbereitet?'✓ Bereit':'Vorbereiten')+'</button></div>').join('')
+      +'</div>'
+      +'<div class="status-bar" style="margin-top:10px;padding-top:10px;border-top:1px solid #e7e5e4">'
+      +'<button class="status-btn '+(e.status_zusammengestellt||e.status_abgeholt?'active-zusammengestellt':'')+'" onclick="updateStatus('+e.id+',\'status_zusammengestellt\','+(!(e.status_zusammengestellt||e.status_abgeholt))+')">'+(e.status_zusammengestellt||e.status_abgeholt?'✓ Zusammengestellt':'Zusammengestellt')+'</button>'
+      +'<button class="status-btn '+(e.status_abgeholt?'active-abgeholt':'')+'" onclick="updateStatus('+e.id+',\'status_abgeholt\','+(!e.status_abgeholt)+')">'+(e.status_abgeholt?'✓ Abgeholt':'Abgeholt')+'</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function renderProdukte(){
+  const fd=document.getElementById('p-datum').value,fa=document.getElementById('p-anlass').value;
+  const src=DB.filter(e=>(!fd||e.datum===fd)&&(!fa||e.anlass===fa));
+  document.getElementById('st-k').textContent=src.length;
+  document.getElementById('st-p').textContent=src.reduce((s,e)=>s+e.positionen.length,0);
+  document.getElementById('st-w').textContent=src.filter(e=>e.anlass==='w').length;
+  document.getElementById('st-s').textContent=src.filter(e=>e.anlass==='s').length;
+
+  // Positionen nach Kategorie gruppieren
+  const byKat={};
+  src.forEach(e=>e.positionen.forEach((p,i)=>{
+    if(!byKat[p.kat])byKat[p.kat]=[];
+    byKat[p.kat].push({...p,kunde:e.name,datum:e.datum,anlass:e.anlass,bid:e.id,pidx:i});
+  }));
+
+  const el=document.getElementById('produkte-list');
+  if(!Object.keys(byKat).length){el.innerHTML='<div class="empty">Keine Einträge.</div>';return;}
+
+  const sortedKats=KATEGORIEN.filter(k=>byKat[k]).concat(Object.keys(byKat).filter(k=>!KATEGORIEN.includes(k)));
+
+  el.innerHTML=sortedKats.map(kat=>{
+    const rows=byKat[kat].sort((a,b)=>a.datum.localeCompare(b.datum)||a.kunde.localeCompare(b.kunde));
+    const isP=!!PLATTE_SORTEN[kat],sorten=PLATTE_SORTEN[kat]||[];
+
+    if(isP){
+      const totals={};sorten.forEach(s=>totals[s]=0);
+      rows.forEach(r=>sorten.forEach(s=>{if(r.sorten&&r.sorten[s])totals[s]+=r.sorten[s];}));
+      const gesamtTotal=Object.values(totals).reduce((a,b)=>a+b,0);
+      return '<div class="prod-block"><div class="prod-title">'+kat+' <span class="prod-count">('+rows.length+')</span></div>'
+        +'<div style="overflow-x:auto"><table class="prod-table"><thead><tr>'
+        +'<th>Status</th><th>Kunde</th><th>Datum</th><th>Gesamt</th>'+sorten.map(s=>'<th>'+s+'</th>').join('')+'<th>Extrawunsch</th></tr></thead><tbody>'
+        +rows.map(r=>{const rowTot=r.sorten?Object.values(r.sorten).reduce((a,b)=>a+b,0):0;
+          return '<tr class="'+(r.vorbereitet?'row-vorbereitet':'')+'">'
+            +'<td><button class="status-btn '+(r.vorbereitet?'active-vorbereitet':'')+'" onclick="toggleVorbereitet('+r.bid+','+r.pidx+')">'+(r.vorbereitet?'✓':'Bereit')+'</button></td>'
+            +'<td>'+r.kunde+'</td><td>'+r.datum+' <span class="badge '+(r.anlass==='s'?'bs':'bw')+'" style="font-size:10px;padding:1px 5px">'+(r.anlass==='s'?'S':'W')+'</span></td>'
+            +'<td style="font-weight:600">'+(r.gesamt||rowTot+'gr')+'</td>'
+            +sorten.map(s=>'<td>'+(r.sorten&&r.sorten[s]?r.sorten[s]:'')+'</td>').join('')
+            +'<td style="color:#78716c">'+(r.extra||'')+'</td></tr>';}).join('')
+        +'<tr class="total-row"><td></td><td colspan="2" style="color:#78716c">Gesamt</td><td>'+gesamtTotal+'gr</td>'+sorten.map(s=>'<td>'+(totals[s]||'')+'</td>').join('')+'<td></td></tr>'
+        +'</tbody></table></div></div>';
+    } else {
+      // Innerhalb der Kategorie nach Fleischsorte gruppieren
+      const byFleisch={};
+      const ohneFleschKey='— ohne Angabe —';
+      rows.forEach(r=>{
+        const key=(r.fleisch||'').trim()||ohneFleschKey;
+        if(!byFleisch[key])byFleisch[key]=[];
+        byFleisch[key].push(r);
+      });
+      const fleischGruppen=Object.keys(byFleisch).sort((a,b)=>{
+        if(a===ohneFleschKey)return 1;if(b===ohneFleschKey)return -1;return a.localeCompare(b);
+      });
+      const mehrereGruppen=fleischGruppen.length>1||(fleischGruppen.length===1&&fleischGruppen[0]!==ohneFleschKey&&rows.some(r=>r.fleisch));
+
+      let tbody='';
+      if(mehrereGruppen){
+        fleischGruppen.forEach(fg=>{
+          const fRows=byFleisch[fg].sort((a,b)=>a.datum.localeCompare(b.datum)||a.kunde.localeCompare(b.kunde));
+          if(fg!==ohneFleschKey){
+            tbody+='<tr class="fleisch-group-header"><td colspan="7">'+fg+' ('+fRows.length+')</td></tr>';
+          }
+          tbody+=fRows.map(r=>'<tr class="'+(r.vorbereitet?'row-vorbereitet':'')+'"><td>'
+            +'<button class="status-btn '+(r.vorbereitet?'active-vorbereitet':'')+'" onclick="toggleVorbereitet('+r.bid+','+r.pidx+')">'+(r.vorbereitet?'✓':'Bereit')+'</button></td>'
+            +'<td>'+r.kunde+'</td><td>'+r.datum+' <span class="badge '+(r.anlass==='s'?'bs':'bw')+'" style="font-size:10px;padding:1px 5px">'+(r.anlass==='s'?'S':'W')+'</span></td>'
+            +'<td>'+(r.menge||'—')+'</td><td>'+(r.fleisch||'—')+'</td>'
+            +'<td style="font-size:11px;color:#78716c">'+(r.extra||'—')+'</td>'
+            +'<td style="font-size:11px;color:#78716c">'+(r.intern||'—')+'</td></tr>').join('');
+        });
+      } else {
+        tbody=rows.map(r=>'<tr class="'+(r.vorbereitet?'row-vorbereitet':'')+'"><td>'
+          +'<button class="status-btn '+(r.vorbereitet?'active-vorbereitet':'')+'" onclick="toggleVorbereitet('+r.bid+','+r.pidx+')">'+(r.vorbereitet?'✓':'Bereit')+'</button></td>'
+          +'<td>'+r.kunde+'</td><td>'+r.datum+' <span class="badge '+(r.anlass==='s'?'bs':'bw')+'" style="font-size:10px;padding:1px 5px">'+(r.anlass==='s'?'S':'W')+'</span></td>'
+          +'<td>'+(r.menge||'—')+'</td><td>'+(r.fleisch||'—')+'</td>'
+          +'<td style="font-size:11px;color:#78716c">'+(r.extra||'—')+'</td>'
+          +'<td style="font-size:11px;color:#78716c">'+(r.intern||'—')+'</td></tr>').join('');
+      }
+
+      return '<div class="prod-block"><div class="prod-title">'+kat+' <span class="prod-count">('+rows.length+')</span></div>'
+        +'<div style="overflow-x:auto"><table class="prod-table" style="table-layout:fixed;width:100%">'
+        +'<colgroup><col style="width:8%"><col style="width:18%"><col style="width:9%"><col style="width:12%"><col style="width:16%"><col style="width:22%"><col style="width:15%"></colgroup>'
+        +'<thead><tr><th>Status</th><th>Kunde</th><th>Datum</th><th>Menge</th><th>Fleischsorte</th><th>Extrawunsch</th><th>Intern</th></tr></thead>'
+        +'<tbody>'+tbody+'</tbody></table></div></div>';
+    }
+  }).join('');
+}
+
+function exportCSV(){
+  if(!DB.length){alert('Keine Daten.');return;}
+  const rows=[['Kunde','Datum','Anlass','Kategorie','Gesamt','Fleischsorte','Sorten','Extrawunsch','Intern','Vorbereitet','Zusammengestellt','Abgeholt']];
+  DB.forEach(e=>e.positionen.forEach(p=>{
+    rows.push([e.name,e.datum,e.anlass==='s'?'Silvester':'Weihnachten',p.kat,p.isP?(p.gesamt||''):p.menge,p.isP?'':p.fleisch,
+      p.isP&&p.sorten?Object.entries(p.sorten).map(([k,v])=>k+':'+v+'gr').join('|'):'',
+      p.extra,p.intern,p.vorbereitet?'Ja':'Nein',e.status_zusammengestellt?'Ja':'Nein',e.status_abgeholt?'Ja':'Nein'
+    ].map(v=>'"'+(v||'').replace(/"/g,'""')+'"'));
+  }));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download='Weihnachtsbestellungen_'+new Date().toLocaleDateString('de-DE').replace(/\./g,'-')+'.csv';
+  a.click();
+}
+
+function exportJSON(){
+  const data={version:1,exportDate:new Date().toISOString(),bestellungen:DB};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  const d=new Date(),tag=d.getDate().toString().padStart(2,'0')+'_'+(d.getMonth()+1).toString().padStart(2,'0')+'_'+d.getFullYear();
+  a.download='Weihnachtsbestellungen_'+tag+'.json';a.click();
+  document.getElementById('backup-info').textContent='Gespeichert: '+new Date().toLocaleString('de-DE');
+}
+function exportCSVLocal(){
+  if(!DB.length){alert('Keine Daten.');return;}
+  const rows=[['Kunde','Datum','Anlass','Kategorie','Gesamt','Fleischsorte','Sorten','Extrawunsch','Intern','Vorbereitet','Zusammengestellt','Abgeholt']];
+  DB.forEach(e=>e.positionen.forEach(p=>{
+    rows.push([e.name,e.datum,e.anlass==='s'?'Silvester':'Weihnachten',p.kat,p.isP?(p.gesamt||''):p.menge,p.isP?'':p.fleisch,
+      p.isP&&p.sorten?Object.entries(p.sorten).map(([k,v])=>k+':'+v+'gr').join('|'):'',
+      p.extra,p.intern,p.vorbereitet?'Ja':'Nein',e.status_zusammengestellt?'Ja':'Nein',e.status_abgeholt?'Ja':'Nein'
+    ].map(v=>'"'+(v||'').replace(/"/g,'""')+'"'));
+  }));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download='Weihnachtsbestellungen_'+new Date().toLocaleDateString('de-DE').replace(/\./g,'-')+'.csv';
+  a.click();
+}
+function importJSON(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const bestellungen=data.bestellungen||data;
+      if(!Array.isArray(bestellungen))throw new Error();
+      if(!confirm('Achtung: Die aktuellen Daten werden mit der Datei ueberschrieben. Fortfahren?'))return;
+      DB=bestellungen;updateHeaderCount();
+      alert('Fertig: '+DB.length+' Bestellungen geladen.');
+      const idx=[...document.querySelectorAll('.tab')].findIndex(t=>t.classList.contains('active'));
+      const tab=['neu','kalender','kunden','produkte'][idx];
+      if(tab==='kalender')renderKalender();
+      if(tab==='kunden')renderKunden();
+      if(tab==='produkte')renderProdukte();
+    }catch(err){alert('Fehler beim Laden der Datei.');}
+  };
+  reader.readAsText(file);input.value='';
+}
+
+function exportExcel(){
+  if(!DB.length){alert('Keine Daten vorhanden.');return;}
+
+  const PLATTE_SORTEN_XL={
+    'Fondue Platte':['Rind','Kalb','Puter','Schwein','Boulette','Weißwurst'],
+    'Raclette Platte':['Rind','Kalb','Puter','Schwein','Burger','Weißwurst','Cordonbleu','Pflaume'],
+    'Raclette Käse Platte':['Raclette','Göhltaler','Le Valét','Bärlauch']
+  };
+  const KATEGORIEN_XL=[
+    'Fondue Platte','Raclette Platte','Fondue/Raclette ohne Platte',
+    'Raclette Käse Platte','Raclette Käse ohne Platte',
+    'Hirschgulasch','Rehgulasch','Hirschrücken & Braten',
+    'Rindfleisch Divers','Rinderbraten, Filet & Contrefilet',
+    'Kalb','Lamm','Schwein','Geflügel','Gefüllte Braten',
+    'Pasteten','Suppen','Rehpfeffer Tafelfertig',
+    'Rindergulasch Rehpfefferart','Sauerbraten','Kalbsgeschnetzeltes',
+    'Kaninchenschenkel Grand Veneur','Gratin','Diverse Fertiggerichte','Sonstiges'
+  ];
+  const TAB_NAMES_XL={
+    'Fondue Platte':'Fondue Platte',
+    'Raclette Platte':'Raclette Platte',
+    'Fondue/Raclette ohne Platte':'F+R ohne Platte',
+    'Raclette Käse Platte':'Raclette Käse Platte',
+    'Raclette Käse ohne Platte':'Raclette Käse oP',
+    'Hirschgulasch':'Hirschgulasch',
+    'Rehgulasch':'Rehgulasch',
+    'Hirschrücken & Braten':'Hirschrücken',
+    'Rindfleisch Divers':'Rind Divers',
+    'Rinderbraten, Filet & Contrefilet':'Rinderbraten+Filet',
+    'Kalb':'Kalb','Lamm':'Lamm','Schwein':'Schwein','Geflügel':'Geflügel',
+    'Gefüllte Braten':'Gefüllte Braten','Pasteten':'Pasteten','Suppen':'Suppen',
+    'Rehpfeffer Tafelfertig':'Rehpfeffer',
+    'Rindergulasch Rehpfefferart':'Rindgulasch Rehpf.',
+    'Sauerbraten':'Sauerbraten','Kalbsgeschnetzeltes':'Kalbsgeschnetzeltes',
+    'Kaninchenschenkel Grand Veneur':'Kaninchen GV',
+    'Gratin':'Gratin','Diverse Fertiggerichte':'Fertiggerichte','Sonstiges':'Sonstiges'
+  };
+
+  const wb = XLSX.utils.book_new();
+
+  // Übersicht Tab
+  const ovData=[['Kategorie','Tab','Anzahl Bestellungen']];
+  KATEGORIEN_XL.forEach(kat=>{
+    const count=DB.reduce((s,e)=>s+e.positionen.filter(p=>p.kat===kat).length,0);
+    ovData.push([kat, TAB_NAMES_XL[kat]||kat, count]);
+  });
+  const wsOv=XLSX.utils.aoa_to_sheet(ovData);
+  wsOv['!cols']=[{wch:38},{wch:22},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, wsOv, 'Übersicht');
+
+  // Ein Tab pro Kategorie
+  KATEGORIEN_XL.forEach(kat=>{
+    const sorten=PLATTE_SORTEN_XL[kat];
+    const isPlatte=!!sorten;
+
+    // Positionen dieser Kategorie aus DB holen
+    const rows=[];
+    DB.forEach(e=>{
+      e.positionen.forEach(p=>{
+        if(p.kat!==kat)return;
+        if(isPlatte){
+          const row={
+            'Name':e.name,
+            'Datum':e.datum,
+            'Anlass':e.anlass==='s'?'Silvester':'Weihnachten',
+            'Gesamt (gr)':p.gesamt||''
+          };
+          sorten.forEach(s=>{ row[s]=p.sorten&&p.sorten[s]?p.sorten[s]:''; });
+          row['Extrawunsch']=p.extra||'';
+          row['Intern']=p.intern||'';
+          row['Vorbereitet']=p.vorbereitet?'Ja':'';
+          row['Zusammengestellt']=e.status_zusammengestellt?'Ja':'';
+          row['Abgeholt']=e.status_abgeholt?'Ja':'';
+          rows.push(row);
+        } else {
+          rows.push({
+            'Name':e.name,
+            'Datum':e.datum,
+            'Anlass':e.anlass==='s'?'Silvester':'Weihnachten',
+            'Menge':p.menge||'',
+            'Fleischsorte':p.fleisch||'',
+            'Extrawunsch':p.extra||'',
+            'Intern':p.intern||'',
+            'Vorbereitet':p.vorbereitet?'Ja':'',
+            'Zusammengestellt':e.status_zusammengestellt?'Ja':'',
+            'Abgeholt':e.status_abgeholt?'Ja':''
+          });
+        }
+      });
+    });
+
+    // Leerzeilen wenn keine Daten
+    if(rows.length===0){
+      if(isPlatte){
+        const empty={'Name':'','Datum':'','Anlass':'','Gesamt (gr)':''};
+        sorten.forEach(s=>empty[s]='');
+        empty['Extrawunsch']='';empty['Intern']='';empty['Vorbereitet']='';empty['Zusammengestellt']='';empty['Abgeholt']='';
+        rows.push(empty);
+      } else {
+        rows.push({'Name':'','Datum':'','Anlass':'','Menge':'','Fleischsorte':'','Extrawunsch':'','Intern':'','Vorbereitet':'','Zusammengestellt':'','Abgeholt':''});
+      }
+    }
+
+    // Summenzeile für Platte
+    if(isPlatte&&rows.length>0){
+      const totalRow={'Name':'GESAMT','Datum':'','Anlass':'','Gesamt (gr)':''};
+      sorten.forEach(s=>{
+        totalRow[s]=rows.reduce((sum,r)=>sum+(parseInt(r[s])||0),0)||'';
+      });
+      totalRow['Extrawunsch']='';totalRow['Intern']='';totalRow['Vorbereitet']='';totalRow['Zusammengestellt']='';totalRow['Abgeholt']='';
+      rows.push(totalRow);
+    }
+
+    const ws=XLSX.utils.json_to_sheet(rows);
+
+    // Spaltenbreiten
+    if(isPlatte){
+      const cols=[{wch:22},{wch:8},{wch:13},{wch:10}];
+      sorten.forEach(()=>cols.push({wch:9}));
+      cols.push({wch:25},{wch:20},{wch:12},{wch:16},{wch:10});
+      ws['!cols']=cols;
+    } else {
+      ws['!cols']=[{wch:22},{wch:8},{wch:13},{wch:10},{wch:20},{wch:28},{wch:20},{wch:12},{wch:16},{wch:10}];
+    }
+
+    const tabName=TAB_NAMES_XL[kat]||kat.substring(0,31);
+    XLSX.utils.book_append_sheet(wb, ws, tabName);
+  });
+
+  const d=new Date();
+  const tag=d.getDate().toString().padStart(2,'0')+'_'+(d.getMonth()+1).toString().padStart(2,'0')+'_'+d.getFullYear();
+  XLSX.writeFile(wb,'Weihnachtsbestellungen_'+tag+'.xlsx');
+}
+fillDatumSelects();
+loadDB().then(()=>{
+  addPosition();
+  const today=getTodayDatum();
+  if(ALLE_TAGE.includes(today))selectedDatum=today;
+});
+</script>
+</body>
+</html>
